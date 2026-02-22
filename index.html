@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 单元测试生成器</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--surface:#1e293b;--surface2:#334155;--border:#475569;--text:#f1f5f9;--text2:#94a3b8;--accent:#6366f1;--accent2:#818cf8;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--radius:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+a{color:var(--accent2)}
+.header{background:linear-gradient(135deg,#1e1b4b,#312e81);border-bottom:1px solid rgba(99,102,241,.3);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header h1{font-size:1.4rem;display:flex;align-items:center;gap:10px}
+.api-key-group{display:flex;align-items:center;gap:8px}
+.api-key-group label{font-size:.85rem;color:var(--text2)}
+.api-key-input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:.85rem;width:260px}
+.api-key-input:focus{outline:none;border-color:var(--accent)}
+.container{max-width:1440px;margin:0 auto;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;min-height:calc(100vh - 72px)}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:rgba(0,0,0,.15)}
+.panel-title{font-weight:600;font-size:.95rem;display:flex;align-items:center;gap:8px}
+.panel-body{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,button{font-family:inherit;font-size:.85rem;border-radius:8px;cursor:pointer;transition:all .2s}
+select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px}
+.btn{padding:8px 18px;border:none;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
+.btn-success{background:var(--green);color:#fff}
+#sourceCode{flex:1;background:transparent;border:none;color:var(--text);font-family:'SF Mono',Consolas,monospace;font-size:.9rem;padding:16px;resize:none;line-height:1.7;tab-size:2}
+#sourceCode:focus{outline:none}
+#sourceCode::placeholder{color:var(--text2)}
+.output-area{flex:1;overflow:auto;position:relative}
+.output-area pre{margin:0;padding:16px;font-size:.88rem;line-height:1.7;background:transparent!important}
+.output-area code{background:transparent!important;font-family:'SF Mono',Consolas,monospace}
+.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text2);text-align:center;padding:40px;gap:12px}
+.placeholder .icon{font-size:3rem;opacity:.4}
+.coverage-bar{padding:14px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,.15)}
+.coverage-header{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+.progress{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text2)}
+.spinner{width:40px;height:40px;border:3px solid var(--surface2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:10px 20px;border-radius:8px;font-size:.9rem;font-weight:500;transform:translateY(80px);opacity:0;transition:all .3s;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.options-row{padding:10px 18px;border-bottom:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:rgba(0,0,0,.08)}
+.options-row label{font-size:.8rem;color:var(--text2);display:flex;align-items:center;gap:4px}
+.options-row input[type=checkbox]{accent-color:var(--accent)}
+</style>
+</head>
+<body>
+<header class="header">
+  <h1><span>🧪</span> AI 单元测试生成器</h1>
+  <div class="api-key-group">
+    <label>DeepSeek API Key:</label>
+    <input type="password" class="api-key-input" id="apiKey" placeholder="sk-..." />
+  </div>
+</header>
+<main class="container">
+  <!-- Left: Source Code -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">📝 源代码</div>
+      <div class="controls">
+        <select id="langSelect">
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="python">Python</option>
+          <option value="go">Go</option>
+          <option value="java">Java</option>
+        </select>
+        <select id="frameworkSelect">
+          <option value="jest">Jest</option>
+          <option value="vitest">Vitest</option>
+          <option value="pytest">pytest</option>
+          <option value="gotest">Go test</option>
+          <option value="junit">JUnit 5</option>
+        </select>
+      </div>
+    </div>
+    <div class="options-row">
+      <label><input type="checkbox" id="optBoundary" checked> 边界条件</label>
+      <label><input type="checkbox" id="optMock" checked> Mock/Stub</label>
+      <label><input type="checkbox" id="optCoverage" checked> 覆盖率建议</label>
+      <label><input type="checkbox" id="optEdge" checked> 异常处理</label>
+    </div>
+    <div class="panel-body">
+      <textarea id="sourceCode" placeholder="在此粘贴你的函数或类代码...&#10;&#10;示例：&#10;function add(a, b) {&#10;  return a + b;&#10;}"></textarea>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+      <button class="btn btn-primary" id="generateBtn" onclick="generate()">🚀 生成测试</button>
+    </div>
+  </div>
+  <!-- Right: Output -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">✅ 生成的测试代码</div>
+      <div class="controls">
+        <button class="btn btn-secondary" onclick="copyOutput()" id="copyBtn" style="display:none">📋 复制代码</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="output-area" id="outputArea">
+        <div class="placeholder" id="placeholder">
+          <div class="icon">🧪</div>
+          <p>粘贴代码并点击「生成测试」<br>AI 将自动生成完整的单元测试</p>
+        </div>
+      </div>
+    </div>
+    <div class="coverage-bar" id="coverageBar" style="display:none">
+      <div class="coverage-header">
+        <span>预估测试覆盖率</span>
+        <span id="coveragePercent">0%</span>
+      </div>
+      <div class="progress">
+        <div class="progress-fill" id="coverageFill" style="width:0%;background:var(--green)"></div>
+      </div>
+    </div>
+  </div>
+</main>
+<div class="toast" id="toast">已复制到剪贴板</div>
+<script>
+const FRAMEWORK_MAP = {
+  javascript: ['jest', 'vitest'],
+  typescript: ['jest', 'vitest'],
+  python: ['pytest'],
+  go: ['gotest'],
+  java: ['junit']
+};
+
+const LANG_LABELS = {
+  javascript: 'JavaScript', typescript: 'TypeScript',
+  python: 'Python', go: 'Go', java: 'Java'
+};
+
+const FRAMEWORK_LABELS = {
+  jest: 'Jest', vitest: 'Vitest', pytest: 'pytest',
+  gotest: 'Go test', junit: 'JUnit 5'
+};
+
+const HL_MAP = {
+  javascript: 'javascript', typescript: 'typescript',
+  python: 'python', go: 'go', java: 'java'
+};
+
+// Sync framework options when language changes
+document.getElementById('langSelect').addEventListener('change', function() {
+  const fw = document.getElementById('frameworkSelect');
+  const frameworks = FRAMEWORK_MAP[this.value];
+  fw.innerHTML = frameworks.map(f =>
+    '<option value="' + f + '">' + FRAMEWORK_LABELS[f] + '</option>'
+  ).join('');
+});
+
+// Load saved API key
+const savedKey = localStorage.getItem('deepseek_api_key');
+if (savedKey) document.getElementById('apiKey').value = savedKey;
+document.getElementById('apiKey').addEventListener('change', function() {
+  localStorage.setItem('deepseek_api_key', this.value);
+});
+
+let generatedCode = '';
+
+function clearAll() {
+  document.getElementById('sourceCode').value = '';
+  document.getElementById('outputArea').innerHTML =
+    '<div class="placeholder" id="placeholder"><div class="icon">🧪</div><p>粘贴代码并点击「生成测试」<br>AI 将自动生成完整的单元测试</p></div>';
+  document.getElementById('coverageBar').style.display = 'none';
+  document.getElementById('copyBtn').style.display = 'none';
+  generatedCode = '';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg || '已复制到剪贴板';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+async function copyOutput() {
+  if (!generatedCode) return;
+  try {
+    await navigator.clipboard.writeText(generatedCode);
+    showToast('已复制到剪贴板 ✅');
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = generatedCode;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('已复制到剪贴板 ✅');
+  }
+}
+
+function buildPrompt(code, lang, framework, options) {
+  const langLabel = LANG_LABELS[lang];
+  const fwLabel = FRAMEWORK_LABELS[framework];
+  let prompt = '你是一位资深的软件测试工程师。请为以下 ' + langLabel + ' 代码生成完整的单元测试。\n\n';
+  prompt += '要求：\n';
+  prompt += '- 使用 ' + fwLabel + ' 测试框架\n';
+  prompt += '- 测试代码必须可以直接运行\n';
+  prompt += '- 包含必要的 import/require 语句\n';
+  if (options.boundary) prompt += '- 覆盖边界条件（空值、极值、类型错误等）\n';
+  if (options.mock) prompt += '- 对外部依赖生成 Mock/Stub\n';
+  if (options.edge) prompt += '- 覆盖异常处理和错误路径\n';
+  if (options.coverage) prompt += '- 在测试代码末尾用注释给出覆盖率分析和建议，格式为：\n  // [COVERAGE] 预估覆盖率: XX%\n  // [COVERAGE] 建议: ...\n';
+  prompt += '- 每个测试用例添加清晰的中文描述\n';
+  prompt += '- 只输出测试代码，不要解释\n\n';
+  prompt += '源代码：\n```' + lang + '\n' + code + '\n```';
+  return prompt;
+}
+
+async function generate() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { showToast('请先输入 DeepSeek API Key ⚠️'); return; }
+
+  const code = document.getElementById('sourceCode').value.trim();
+  if (!code) { showToast('请先粘贴源代码 ⚠️'); return; }
+
+  const lang = document.getElementById('langSelect').value;
+  const framework = document.getElementById('frameworkSelect').value;
+  const options = {
+    boundary: document.getElementById('optBoundary').checked,
+    mock: document.getElementById('optMock').checked,
+    coverage: document.getElementById('optCoverage').checked,
+    edge: document.getElementById('optEdge').checked
+  };
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ 生成中...';
+  document.getElementById('copyBtn').style.display = 'none';
+  document.getElementById('coverageBar').style.display = 'none';
+  document.getElementById('outputArea').innerHTML =
+    '<div class="loading"><div class="spinner"></div><div class="loading-text">AI 正在分析代码并生成测试...</div></div>';
+
+  generatedCode = '';
+  const prompt = buildPrompt(code, lang, framework, options);
+
+  try {
+    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: '你是一位专业的软件测试工程师，擅长编写高质量的单元测试。只输出代码，不要多余解释。' },
+          { role: 'user', content: prompt }
+        ],
+        stream: true,
+        temperature: 0.3,
+        max_tokens: 4096
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error('API 错误 (' + resp.status + '): ' + err);
+    }
+
+    // Stream reading
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+
+    document.getElementById('outputArea').innerHTML = '<pre><code id="streamCode" class="language-' + HL_MAP[lang] + '"></code></pre>';
+    const codeEl = document.getElementById('streamCode');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') break;
+        try {
+          const json = JSON.parse(data);
+          const delta = json.choices[0].delta;
+          if (delta && delta.content) {
+            fullText += delta.content;
+            codeEl.textContent = stripCodeFence(fullText);
+          }
+        } catch {}
+      }
+    }
+
+    generatedCode = stripCodeFence(fullText);
+    // Final highlight
+    codeEl.textContent = generatedCode;
+    hljs.highlightElement(codeEl);
+
+    document.getElementById('copyBtn').style.display = '';
+    parseCoverage(fullText);
+
+  } catch (e) {
+    document.getElementById('outputArea').innerHTML =
+      '<div class="placeholder"><div class="icon">❌</div><p style="color:var(--red)">' + escapeHtml(e.message) + '</p></div>';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 生成测试';
+  }
+}
+
+function stripCodeFence(text) {
+  // Remove markdown code fences
+  return text.replace(/^```[\w]*\n?/gm, '').replace(/\n?```$/gm, '').trim();
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function parseCoverage(text) {
+  const match = text.match(/\[COVERAGE\]\s*预估覆盖率[:：]\s*(\d+)%/);
+  if (match) {
+    const pct = parseInt(match[1]);
+    document.getElementById('coverageBar').style.display = '';
+    document.getElementById('coveragePercent').textContent = pct + '%';
+    const fill = document.getElementById('coverageFill');
+    fill.style.background = pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--orange)' : 'var(--red)';
+    setTimeout(() => { fill.style.width = pct + '%'; }, 50);
+  }
+}
+
+// Tab key support in textarea
+document.getElementById('sourceCode').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = this.selectionStart, end = this.selectionEnd;
+    this.value = this.value.substring(0, s) + '  ' + this.value.substring(end);
+    this.selectionStart = this.selectionEnd = s + 2;
+  }
+});
+</script>
+</body>
+</html>
